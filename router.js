@@ -1,11 +1,21 @@
 const express = require('express');
 const router = express.Router();
 const path = require('path');
-import { login, authenticateToken } from 'auth_helper.js';
+const { login, authenticateToken, register } = require('./fake_db/auth_helper');
 
 // Homepage
 router.get('/', (req, res) => {
     res.send('Welcome to the homepage');
+});
+
+// Register
+router.get('/register', async (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'register.html'));
+});
+
+router.post('/register', async (req, res) => {
+    const { username, password } = req.body;
+    await register(username, password, res);
 });
 
 // Login
@@ -14,9 +24,8 @@ router.get('/login', (req, res) => {
 });
 
 router.post('/login', async (req, res) => {
-    console.log(req.body);
     const { username, password } = req.body;
-    await login(username, password);
+    await login(username, password, res);
 });
 
 router.get('/about', (req, res) => {
@@ -24,8 +33,8 @@ router.get('/about', (req, res) => {
 });
 
 // Protected route
-app.get('/protected', authenticateToken, (req, res) => {
-    res.send('Protected route');
+router.get('/protected', authenticateToken, (req, res) => {
+    res.json({ message: 'Protected route', user: req.user });
 });
 
 module.exports = router;

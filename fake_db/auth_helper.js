@@ -1,18 +1,31 @@
-import { users } from '/fake_db/user.js';
-const jwt = require('jsonwebtoken');
-const bcrypt = require('bcryptjs');
+const users = [];
+const { sign, verify } = require('jsonwebtoken');
+const { hash, compare } = require('bcryptjs');
 
 // Check if username and password match
-export async function login(username, password) {
+async function register(username, password, res) {
+    try {
+        const hashedPassword = await hash(password, 10);
+        const user = { username: username, password: hashedPassword };
+        users.push(user);
+        res.status(201);
+        res.redirect('/login');
+    } catch {
+        res.status(500).send();
+    }
+}
+
+// Check if username and password match
+async function login(username, password, res) {
     const user = users.find(user => user.username === username);
     if (user == null) {
         return res.status(400).send('User not found');
     }
 
     try {
-        if (await bcrypt.compare(password, user.password)) {
-            const token = jwt.sign({ username: user.username }, 'secret');
-            res.json({ token });
+        if (await compare(password, user.password)) {
+            const token = sign({ username: user.username }, 'secret');
+            res.redirect('/protected');
         } else {
             res.status(401).send('Password incorrect');
         }
@@ -22,13 +35,13 @@ export async function login(username, password) {
 }
 
 // Middleware to authenticate JWT token
-export function authenticateToken(req, res, next) {
+function authenticateToken(req, res, next) {
     const authHeader = req.headers['authorization'];
     const token = authHeader && authHeader.split(' ')[1];
     if (token == null) {
         return res.sendStatus(401);
     }
-    jwt.verify(token, 'secret', (err, user) => {
+    verify(token, 'secret', (err, user) => {
         if (err) {
             return res.sendStatus(403);
         }
@@ -36,3 +49,5 @@ export function authenticateToken(req, res, next) {
         next();
     });
 }
+
+module.exports = { login, authenticateToken, register };
