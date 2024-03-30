@@ -1,2 +1,3 @@
-Authentication and authorization system using Express.js
-JWT WIP
+- Authentication and authorization system using Express.js
+- JWT
+- Webpack integration
