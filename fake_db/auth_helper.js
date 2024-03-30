@@ -1,12 +1,13 @@
 const users = [];
 const { sign, verify } = require('jsonwebtoken');
 const { hash, compare } = require('bcryptjs');
+const { v4 } = require('uuid'); 
 
 // Check if username and password match
 async function register(username, password, res) {
     try {
         const hashedPassword = await hash(password, 10);
-        const user = { username: username, password: hashedPassword };
+        const user = { uid: v4(), username: username, password: hashedPassword };
         users.push(user);
         res.status(201);
         res.redirect('/login');
